@@ -1,6 +1,6 @@
 <script setup>
-import { onMounted, reactive, ref } from 'vue'
-import { CheckCircle2, RefreshCcw, Save } from 'lucide-vue-next'
+import { onMounted, reactive, ref, watch } from 'vue'
+import { AlertTriangle, CheckCircle2, RefreshCcw, Save } from 'lucide-vue-next'
 
 import { appointmentApi } from '../api/modules'
 import DataTable from '../components/DataTable.vue'
@@ -77,6 +77,34 @@ async function changeStatus(row, status) {
   }
 }
 
+const quotaWarning = reactive({
+  isWarning: false,
+  remaining: null,
+  maxDailySlots: null,
+  warningThreshold: null
+})
+
+async function checkQuotaWarning() {
+  quotaWarning.isWarning = false
+  quotaWarning.remaining = null
+  quotaWarning.maxDailySlots = null
+  quotaWarning.warningThreshold = null
+
+  if (!form.subject || !form.examDate) return
+
+  try {
+    const data = await appointmentApi.checkQuota(form.subject, form.examDate)
+    quotaWarning.isWarning = data.isWarning
+    quotaWarning.remaining = data.remaining
+    quotaWarning.maxDailySlots = data.maxDailySlots
+    quotaWarning.warningThreshold = data.warningThreshold
+  } catch {
+    quotaWarning.isWarning = false
+  }
+}
+
+watch(() => [form.subject, form.examDate], checkQuotaWarning)
+
 onMounted(loadAppointments)
 </script>
 
@@ -92,6 +120,11 @@ onMounted(loadAppointments)
       </div>
 
       <MessageBar :message="message.text" :type="message.type" />
+
+      <div v-if="quotaWarning.isWarning" class="quota-warning">
+        <AlertTriangle :size="18" />
+        <span>名额预警：该科目当日仅剩 <strong>{{ quotaWarning.remaining }}</strong> / {{ quotaWarning.maxDailySlots }} 个名额（预警阈值 {{ quotaWarning.warningThreshold }}）</span>
+      </div>
 
       <label>
         <span>学员姓名</span>

@@ -3,7 +3,8 @@ import { api } from './http'
 export const appointmentApi = {
   list: () => api.get('/api/appointments'),
   create: (payload) => api.post('/api/appointments', payload),
-  updateStatus: (id, status) => api.patch(`/api/appointments/${id}`, { status })
+  updateStatus: (id, status) => api.patch(`/api/appointments/${id}`, { status }),
+  checkQuota: (subject, examDate) => api.get(`/api/appointments/quota?subject=${encodeURIComponent(subject)}&examDate=${encodeURIComponent(examDate)}`)
 }
 
 export const examApi = {

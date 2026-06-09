@@ -13,6 +13,7 @@ class Rule(db.Model):
     allow_weekend = db.Column(db.Boolean, nullable=False, default=False)
     passing_score = db.Column(db.Integer, nullable=False, default=90)
     makeup_wait_days = db.Column(db.Integer, nullable=False, default=10)
+    quota_warning_threshold = db.Column(db.Integer, nullable=True, default=None)
     enabled = db.Column(db.Boolean, nullable=False, default=True)
 
     def to_dict(self):
@@ -24,6 +25,7 @@ class Rule(db.Model):
             "allowWeekend": self.allow_weekend,
             "passingScore": self.passing_score,
             "makeupWaitDays": self.makeup_wait_days,
+            "quotaWarningThreshold": self.quota_warning_threshold,
             "enabled": self.enabled,
         }
 

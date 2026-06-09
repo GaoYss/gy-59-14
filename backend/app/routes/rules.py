@@ -30,6 +30,13 @@ def update_rule(rule_id):
                 return jsonify({"message": f"{api_key} 不能小于 0"}), 400
             setattr(rule, model_key, value)
 
+    if "quotaWarningThreshold" in payload:
+        val = payload["quotaWarningThreshold"]
+        if val is None:
+            rule.quota_warning_threshold = None
+        else:
+            rule.quota_warning_threshold = int(val)
+
     if "allowWeekend" in payload:
         rule.allow_weekend = bool(payload["allowWeekend"])
     if "enabled" in payload:

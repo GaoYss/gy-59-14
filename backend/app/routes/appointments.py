@@ -56,6 +56,40 @@ def validate_appointment(payload):
     return None, exam_date
 
 
+@appointments_bp.get("/quota")
+def check_quota():
+    subject = request.args.get("subject")
+    exam_date_str = request.args.get("examDate")
+    if not subject or not exam_date_str:
+        return jsonify({"message": "缺少 subject 或 examDate 参数"}), 400
+
+    exam_date = parse_exam_date(exam_date_str)
+    if not exam_date:
+        return jsonify({"message": "日期格式应为 YYYY-MM-DD"}), 400
+
+    rule = Rule.query.filter_by(subject=subject).first()
+    if not rule:
+        return jsonify({"message": "未找到该科目规则"}), 404
+
+    booked_count = Appointment.query.filter(
+        Appointment.subject == subject,
+        Appointment.exam_date == exam_date,
+        Appointment.status.in_(["已预约", "已确认"]),
+    ).count()
+
+    remaining = rule.max_daily_slots - booked_count
+    threshold = rule.quota_warning_threshold
+    is_warning = threshold is not None and remaining <= threshold
+
+    return jsonify({
+        "maxDailySlots": rule.max_daily_slots,
+        "bookedCount": booked_count,
+        "remaining": remaining,
+        "warningThreshold": threshold,
+        "isWarning": is_warning,
+    })
+
+
 @appointments_bp.get("")
 def list_appointments():
     subject = request.args.get("subject")

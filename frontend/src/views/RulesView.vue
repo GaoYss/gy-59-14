@@ -29,6 +29,7 @@ async function saveRule(rule) {
       allowWeekend: rule.allowWeekend,
       passingScore: rule.passingScore,
       makeupWaitDays: rule.makeupWaitDays,
+      quotaWarningThreshold: rule.quotaWarningThreshold || null,
       enabled: rule.enabled
     })
     const index = rules.value.findIndex((item) => item.id === updated.id)
@@ -84,6 +85,10 @@ onMounted(loadRules)
           <label>
             <span>补考等待</span>
             <input v-model.number="rule.makeupWaitDays" min="0" type="number" />
+          </label>
+          <label>
+            <span>名额预警阈值</span>
+            <input v-model.number="rule.quotaWarningThreshold" min="0" type="number" placeholder="留空则不预警" />
           </label>
         </div>
 
