@@ -189,6 +189,12 @@ label {
   font-weight: 700;
 }
 
+.field-error {
+  color: #a32929;
+  font-size: 12px;
+  font-weight: 500;
+}
+
 input,
 select,
 textarea {

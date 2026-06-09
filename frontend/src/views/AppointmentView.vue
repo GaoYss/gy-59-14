@@ -50,6 +50,8 @@ async function loadAppointments() {
 async function submitAppointment() {
   saving.value = true
   setMessage('')
+  const submittedSubject = form.subject
+  const submittedDate = form.examDate
   try {
     await appointmentApi.create({ ...form })
     Object.assign(form, {
@@ -61,6 +63,7 @@ async function submitAppointment() {
     })
     setMessage('预约已提交', 'success')
     await loadAppointments()
+    await checkQuotaWarning(submittedSubject, submittedDate)
   } catch (error) {
     setMessage(error.message, 'error')
   } finally {
@@ -81,29 +84,38 @@ const quotaWarning = reactive({
   isWarning: false,
   remaining: null,
   maxDailySlots: null,
-  warningThreshold: null
+  warningThreshold: null,
+  subject: '',
+  examDate: ''
 })
 
-async function checkQuotaWarning() {
-  quotaWarning.isWarning = false
-  quotaWarning.remaining = null
-  quotaWarning.maxDailySlots = null
-  quotaWarning.warningThreshold = null
-
-  if (!form.subject || !form.examDate) return
+async function checkQuotaWarning(subject, examDate) {
+  if (!subject || !examDate) {
+    quotaWarning.isWarning = false
+    quotaWarning.remaining = null
+    quotaWarning.maxDailySlots = null
+    quotaWarning.warningThreshold = null
+    quotaWarning.subject = ''
+    quotaWarning.examDate = ''
+    return
+  }
 
   try {
-    const data = await appointmentApi.checkQuota(form.subject, form.examDate)
+    const data = await appointmentApi.checkQuota(subject, examDate)
     quotaWarning.isWarning = data.isWarning
     quotaWarning.remaining = data.remaining
     quotaWarning.maxDailySlots = data.maxDailySlots
     quotaWarning.warningThreshold = data.warningThreshold
+    quotaWarning.subject = subject
+    quotaWarning.examDate = examDate
   } catch {
     quotaWarning.isWarning = false
   }
 }
 
-watch(() => [form.subject, form.examDate], checkQuotaWarning)
+watch(() => [form.subject, form.examDate], (val) => {
+  checkQuotaWarning(val[0], val[1])
+})
 
 onMounted(loadAppointments)
 </script>
@@ -173,7 +185,7 @@ onMounted(loadAppointments)
       <template v-else>
         <div v-if="quotaWarning.isWarning" class="quota-warning">
           <AlertTriangle :size="18" />
-          <span>名额预警：{{ form.subject }} {{ form.examDate }} 仅剩 <strong>{{ quotaWarning.remaining }}</strong> / {{ quotaWarning.maxDailySlots }} 个名额（预警阈值 {{ quotaWarning.warningThreshold }}）</span>
+          <span>名额预警：{{ quotaWarning.subject }} {{ quotaWarning.examDate }} 仅剩 <strong>{{ quotaWarning.remaining }}</strong> / {{ quotaWarning.maxDailySlots }} 个名额（预警阈值 {{ quotaWarning.warningThreshold }}）</span>
         </div>
         <DataTable :columns="columns" :rows="appointments">
           <template #status="{ row }">

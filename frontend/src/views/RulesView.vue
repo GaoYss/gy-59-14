@@ -10,6 +10,10 @@ const rules = ref([])
 const savingId = ref(null)
 const message = reactive({ text: '', type: 'info' })
 
+function isThresholdInvalid(rule) {
+  return rule.quotaWarningThreshold !== null && rule.quotaWarningThreshold !== '' && !isNaN(rule.quotaWarningThreshold) && rule.quotaWarningThreshold < 0
+}
+
 async function loadRules() {
   try {
     rules.value = await ruleApi.list()
@@ -20,6 +24,7 @@ async function loadRules() {
 }
 
 async function saveRule(rule) {
+  if (isThresholdInvalid(rule)) return
   savingId.value = rule.id
   message.text = ''
   try {
@@ -89,6 +94,7 @@ onMounted(loadRules)
           <label>
             <span>名额预警阈值</span>
             <input v-model.number="rule.quotaWarningThreshold" min="0" type="number" placeholder="留空则不预警" />
+            <span v-if="isThresholdInvalid(rule)" class="field-error">不能为负数</span>
           </label>
         </div>
 
