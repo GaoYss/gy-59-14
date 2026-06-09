@@ -10,8 +10,18 @@ const rules = ref([])
 const savingId = ref(null)
 const message = reactive({ text: '', type: 'info' })
 
+function hasThresholdValue(rule) {
+  return rule.quotaWarningThreshold !== null && rule.quotaWarningThreshold !== '' && !isNaN(rule.quotaWarningThreshold)
+}
+
 function isThresholdInvalid(rule) {
-  return rule.quotaWarningThreshold !== null && rule.quotaWarningThreshold !== '' && !isNaN(rule.quotaWarningThreshold) && rule.quotaWarningThreshold < 0
+  if (!hasThresholdValue(rule)) return false
+  return rule.quotaWarningThreshold < 0
+}
+
+function isThresholdOversized(rule) {
+  if (!hasThresholdValue(rule)) return false
+  return rule.quotaWarningThreshold > rule.maxDailySlots
 }
 
 async function loadRules() {
@@ -24,7 +34,16 @@ async function loadRules() {
 }
 
 async function saveRule(rule) {
-  if (isThresholdInvalid(rule)) return
+  if (isThresholdInvalid(rule)) {
+    message.text = `${rule.subject} 名额预警阈值不能为负数`
+    message.type = 'error'
+    return
+  }
+  if (isThresholdOversized(rule)) {
+    message.text = `${rule.subject} 名额预警阈值不能大于每日名额（${rule.maxDailySlots}）`
+    message.type = 'error'
+    return
+  }
   savingId.value = rule.id
   message.text = ''
   try {
@@ -95,6 +114,7 @@ onMounted(loadRules)
             <span>名额预警阈值</span>
             <input v-model.number="rule.quotaWarningThreshold" min="0" type="number" placeholder="留空则不预警" />
             <span v-if="isThresholdInvalid(rule)" class="field-error">不能为负数</span>
+            <span v-else-if="isThresholdOversized(rule)" class="field-error">不能大于每日名额</span>
           </label>
         </div>
 

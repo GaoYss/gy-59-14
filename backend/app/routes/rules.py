@@ -38,6 +38,8 @@ def update_rule(rule_id):
             int_val = int(val)
             if int_val < 0:
                 return jsonify({"message": "名额预警阈值不能小于 0"}), 400
+            if int_val > rule.max_daily_slots:
+                return jsonify({"message": f"名额预警阈值不能大于每日名额（{rule.max_daily_slots}）"}), 400
             rule.quota_warning_threshold = int_val
 
     if "allowWeekend" in payload:
