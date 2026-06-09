@@ -35,7 +35,10 @@ def update_rule(rule_id):
         if val is None:
             rule.quota_warning_threshold = None
         else:
-            rule.quota_warning_threshold = int(val)
+            int_val = int(val)
+            if int_val < 0:
+                return jsonify({"message": "名额预警阈值不能小于 0"}), 400
+            rule.quota_warning_threshold = int_val
 
     if "allowWeekend" in payload:
         rule.allow_weekend = bool(payload["allowWeekend"])

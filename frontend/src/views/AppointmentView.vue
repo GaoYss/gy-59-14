@@ -121,11 +121,6 @@ onMounted(loadAppointments)
 
       <MessageBar :message="message.text" :type="message.type" />
 
-      <div v-if="quotaWarning.isWarning" class="quota-warning">
-        <AlertTriangle :size="18" />
-        <span>名额预警：该科目当日仅剩 <strong>{{ quotaWarning.remaining }}</strong> / {{ quotaWarning.maxDailySlots }} 个名额（预警阈值 {{ quotaWarning.warningThreshold }}）</span>
-      </div>
-
       <label>
         <span>学员姓名</span>
         <input v-model.trim="form.studentName" required placeholder="请输入姓名" />
@@ -175,16 +170,22 @@ onMounted(loadAppointments)
         title="暂无预约"
         description="提交预约后将在这里显示。"
       />
-      <DataTable v-else :columns="columns" :rows="appointments">
-        <template #status="{ row }">
-          <StatusBadge :status="row.status" />
-        </template>
-        <template #actions="{ row }">
-          <select class="compact-select" :value="row.status" @change="changeStatus(row, $event.target.value)">
-            <option v-for="status in appointmentStatuses" :key="status">{{ status }}</option>
-          </select>
-        </template>
-      </DataTable>
+      <template v-else>
+        <div v-if="quotaWarning.isWarning" class="quota-warning">
+          <AlertTriangle :size="18" />
+          <span>名额预警：{{ form.subject }} {{ form.examDate }} 仅剩 <strong>{{ quotaWarning.remaining }}</strong> / {{ quotaWarning.maxDailySlots }} 个名额（预警阈值 {{ quotaWarning.warningThreshold }}）</span>
+        </div>
+        <DataTable :columns="columns" :rows="appointments">
+          <template #status="{ row }">
+            <StatusBadge :status="row.status" />
+          </template>
+          <template #actions="{ row }">
+            <select class="compact-select" :value="row.status" @change="changeStatus(row, $event.target.value)">
+              <option v-for="status in appointmentStatuses" :key="status">{{ status }}</option>
+            </select>
+          </template>
+        </DataTable>
+      </template>
     </section>
   </section>
 </template>

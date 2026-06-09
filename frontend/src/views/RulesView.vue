@@ -29,7 +29,7 @@ async function saveRule(rule) {
       allowWeekend: rule.allowWeekend,
       passingScore: rule.passingScore,
       makeupWaitDays: rule.makeupWaitDays,
-      quotaWarningThreshold: rule.quotaWarningThreshold || null,
+      quotaWarningThreshold: rule.quotaWarningThreshold !== null && rule.quotaWarningThreshold !== '' && !isNaN(rule.quotaWarningThreshold) ? rule.quotaWarningThreshold : null,
       enabled: rule.enabled
     })
     const index = rules.value.findIndex((item) => item.id === updated.id)
